@@ -31,7 +31,7 @@ func generateRandomId() string {
 }
 func listBooksHandler(w http.ResponseWriter, r *http.Request) {
 
-	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("content-Type", "application/json")
 	json.NewEncoder(w).Encode(books)
 }
 
@@ -63,15 +63,31 @@ func addBookHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func viewBookHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(books)
+func viewBookByIdHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Path[len("/books/"):]
+
+	bookMutex.Lock()
+	defer bookMutex.Unlock()
+
+	for _, book := range books {
+		if book.ID == id {
+			switch r.Method {
+			case "GET":
+				w.Header().Set("content-Type", "application/json")
+				json.NewEncoder(w).Encode(book)
+			case "PUT":
+
+			case "DELETE":
+			default:
+			}
+		}
+	}
 }
 
 func main() {
 	http.HandleFunc("/add", addBookHandler)
 	http.HandleFunc("/books", listBooksHandler)
-	http.HandleFunc("/books/", viewBookHandler)
+	http.HandleFunc("/books/", viewBookByIdHandler)
 	fmt.Println("server is running on Port 8080...")
 	http.ListenAndServe(":8080", nil)
 }
