@@ -69,14 +69,31 @@ func viewBookByIdHandler(w http.ResponseWriter, r *http.Request) {
 	bookMutex.Lock()
 	defer bookMutex.Unlock()
 
-	for _, book := range books {
-		if book.ID == id {
+	for i, singleBook := range books {
+		if singleBook.ID == id {
 			switch r.Method {
 			case "GET":
 				w.Header().Set("content-Type", "application/json")
-				json.NewEncoder(w).Encode(book)
+				json.NewEncoder(w).Encode(singleBook)
 			case "PUT":
-
+				var updateBook book
+				body, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					http.Error(w, "Unable to read fro request body", http.StatusBadRequest)
+					return
+				}
+				err = json.Unmarshal(body, &updateBook)
+				if err != nil || updateBook.Author == "" {
+					http.Error(w, "Invalid author", http.StatusBadRequest)
+					return
+				}
+				if err != nil || updateBook.Title == "" {
+					http.Error(w, "Invalid Title", http.StatusBadRequest)
+					return
+				}
+				books[i].Author = updateBook.Author
+				books[i].Title = updateBook.Title
+				json.NewEncoder(w).Encode(books[i])
 			case "DELETE":
 			default:
 			}
